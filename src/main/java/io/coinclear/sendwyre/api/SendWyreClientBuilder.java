@@ -1,15 +1,15 @@
 package io.coinclear.sendwyre.api;
 
 import io.coinclear.sendwyre.api.interceptors.ApiKeyInterceptor;
+import io.coinclear.sendwyre.api.interceptors.LoggingInterceptor;
 import io.coinclear.sendwyre.api.interceptors.RequestSignatureInterceptor;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 import okhttp3.ConnectionSpec;
 import okhttp3.OkHttpClient;
 import okhttp3.TlsVersion;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Builder for creating a {@link SendWyre} client
  */
+@NoArgsConstructor
 public final class SendWyreClientBuilder {
 
     private static final String X_API_KEY = "X-Api-Key";
@@ -42,18 +43,16 @@ public final class SendWyreClientBuilder {
                     .tlsVersions(TlsVersion.TLS_1_2)
                     .build();
 
-    @NonNull
+    // SendWyre client fields
     private String apiKey;
-    @NonNull
     private String secretKey;
-    @NonNull
     private String baseUrl;
-    @NonNull
+
+    // OkHttp Client Configurations
     private OkHttpClient.Builder okHttpClientBuilder;
+    private HttpLoggingInterceptor.Level httpLogLevel;
     private long readTimeoutSeconds;
     private long connectTimeoutSeconds;
-
-    private HttpLoggingInterceptor.Level httpLogLevel;
 
     /**
      * Builds a client implementation of the SendWyre API
@@ -90,12 +89,12 @@ public final class SendWyreClientBuilder {
                 .readTimeout(readTimeoutSeconds, TimeUnit.SECONDS)
                 .connectTimeout(connectTimeoutSeconds, TimeUnit.SECONDS)
                 .followSslRedirects(false)
-
                 .connectionSpecs(Collections.singletonList(CONNECTION_SPEC));
 
         if (httpLogLevel != null) {
             okHttpClientBuilder.addInterceptor(new HttpLoggingInterceptor().setLevel(httpLogLevel));
         }
+        okHttpClientBuilder.addInterceptor(new LoggingInterceptor());
 
         ApiKeyInterceptor apiKeyInterceptor = ApiKeyInterceptor.builder()
                 .apiKey(this.apiKey)
@@ -108,6 +107,7 @@ public final class SendWyreClientBuilder {
                 .headerValue(X_API_SIGNATURE)
                 .build();
         okHttpClientBuilder.addInterceptor(signatureInterceptor);
+        okHttpClientBuilder.addNetworkInterceptor(signatureInterceptor);
 
         checkRuntimeSupportsTls12(okHttpClientBuilder);
 

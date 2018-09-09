@@ -28,10 +28,10 @@ public class ApiKeyInterceptor implements Interceptor {
         Request originalRequest = chain.request();
 
         Request.Builder builder = originalRequest.newBuilder()
+                .method(originalRequest.method(), originalRequest.body())
                 .header(headerValue, apiKey);
 
         Request newRequest = builder.build();
-        System.out.println(newRequest.headers());
         return chain.proceed(newRequest);
     }
 }

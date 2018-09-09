@@ -29,11 +29,27 @@ public class RequestSignatureInterceptor implements Interceptor {
     @NonNull
     private String secretKey;
 
-    private String computeSignature(String url, String reqData) {
-        String data = url + reqData;
-        log.info("Data to compute signature: {} ", data);
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request originalRequest = chain.request();
+        String url = originalRequest.url().toString();
+        url += (((url.indexOf("?") > 0) ? "&" : "?") + "timestamp=" + System.currentTimeMillis());
 
-        System.out.println(data);
+        String data = StringUtils.EMPTY;
+        if (Objects.nonNull(originalRequest.body())) {
+            data = originalRequest.body().toString();
+        }
+        String requestSignature = computeSignature(url, data);
+        Request.Builder builder = originalRequest.newBuilder()
+                .method(originalRequest.method(), originalRequest.body())
+                .header(headerValue, requestSignature);
+        Request newRequest = builder.build();
+
+        return chain.proceed(newRequest);
+    }
+
+    public String computeSignature(String url, String reqData) {
+        String data = url + reqData;
 
         try {
             Mac sha256Hmac = Mac.getInstance(HMAC);
@@ -51,26 +67,5 @@ public class RequestSignatureInterceptor implements Interceptor {
             log.error("Unable to create request signature: ", e);
             return StringUtils.EMPTY;
         }
-    }
-
-    @Override
-    public Response intercept(Chain chain) throws IOException {
-        Request originalRequest = chain.request();
-        String url = originalRequest.url().toString();
-        url += ((url.indexOf("?") > 0) ? "&" : "?") + "timestamp=" + System.currentTimeMillis();
-
-        String data = StringUtils.EMPTY;
-        if (Objects.nonNull(originalRequest.body())) {
-            data = originalRequest.body().toString();
-        }
-        String requestSignature = computeSignature(url, data);
-
-        System.out.println(requestSignature);
-
-        Request.Builder builder = originalRequest.newBuilder()
-                .header(headerValue, requestSignature);
-
-        Request newRequest = builder.build();
-        return chain.proceed(newRequest);
     }
 }

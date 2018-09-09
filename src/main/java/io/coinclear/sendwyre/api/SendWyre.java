@@ -17,7 +17,11 @@ public interface SendWyre {
      *
      * @return {@link AccountDetails}
      */
-    @Headers("X-Api-Version: 2")
+    @Headers({
+            "X-Api-Version: 2",
+            "Content-Type: application/json",
+            "Accept: application/json",
+    })
     @GET("/account")
     Call<AccountDetails> getAccountDetails();
 }
