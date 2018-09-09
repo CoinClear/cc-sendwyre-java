@@ -30,6 +30,7 @@ public class RequestSignatureInterceptorTest {
         String s = interceptor.computeSignature(urlToTest, "");
         String s1 = computeSignature(secretKey, urlToTest, "");
 
+        System.out.println(s1);
         Assert.assertEquals("Computed Signatures should match", s, s1);
     }
 

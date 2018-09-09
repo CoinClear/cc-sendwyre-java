@@ -41,6 +41,7 @@ public class RequestSignatureInterceptor implements Interceptor {
         }
         String requestSignature = computeSignature(url, data);
         Request.Builder builder = originalRequest.newBuilder()
+                .url(url)
                 .method(originalRequest.method(), originalRequest.body())
                 .header(headerValue, requestSignature);
         Request newRequest = builder.build();

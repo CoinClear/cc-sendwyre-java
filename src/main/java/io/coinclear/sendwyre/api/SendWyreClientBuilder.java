@@ -107,7 +107,7 @@ public final class SendWyreClientBuilder {
                 .headerValue(X_API_SIGNATURE)
                 .build();
         okHttpClientBuilder.addInterceptor(signatureInterceptor);
-        okHttpClientBuilder.addNetworkInterceptor(signatureInterceptor);
+
 
         checkRuntimeSupportsTls12(okHttpClientBuilder);
 
